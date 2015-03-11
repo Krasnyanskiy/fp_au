@@ -1,2 +1,2 @@
 # Functional_programming_AU
-Paradise functional programming tasks
+*P*aradise functional programming tasks
