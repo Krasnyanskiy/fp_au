@@ -1,2 +1,2 @@
 # Functional_programming_AU
-Hell functional programming tasks
+Paradise functional programming tasks
