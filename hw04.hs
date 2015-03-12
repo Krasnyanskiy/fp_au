@@ -3,17 +3,16 @@
 --    Для отрицательных n значение определяется по формуле fib n = fib (n + 2) - fib (n + 1).
 --    (1 балл)
 fib :: Integer -> Integer
-fib = \n -> if n > 0 
+fib n = if n > 0 
 	then fib1 0 1 n
-	else (minus n) * (fib1 0 1 (-n))  
+	else minus n * fib1 0 1 (-n)
     where 
     	fib1 :: Integer -> Integer -> Integer -> Integer
         fib1 a b 0 = a
         fib1 a b i = fib1 (a+b) a (i-1)
 
         minus :: Integer -> Integer 
-        minus n = if (mod n 2 == 0) then -1 else 1     
-            
+        minus n = if even n then -1 else 1     
 
 -- 2a. Написать функцию, возвращающую количество цифр числа.
 --     Для целочисленного деления можете использовать функции div и mod.
@@ -39,7 +38,7 @@ sumOfDigits n
 gcd' :: Integer -> Integer -> Integer
 gcd' a b 
     | a < b = gcd b a
-    | not (mod a b == 0) = gcd (mod a b) b
+    | mod a b /= 0 = gcd (mod a b) b
     | otherwise = b      
 
 -- 4. minp p возвращает минимальное по модулю число x такое, что p x == True. Если такого x не существует, minp не завершается.
@@ -54,7 +53,7 @@ minp p = minp' p 0
 --    Для реализации можете использовать метод трапеций.
 --    (2 балла)
 integral :: (Double -> Double) -> Double -> Double -> Double
-integral f a b = if not (a == b) 
+integral f a b = if a /= b 
 	             then ((b-a) / (2.0 * ((b-a) / 0.01))) * (integral' f a b a 0.01)
 	             else 0.0
     where 
@@ -64,6 +63,9 @@ integral f a b = if not (a == b)
             | a >= b0 = (f b0) 
             | otherwise = (2.0 * (f b0)) + integral' f a0 b0 (a+h) h 
 
+-- !!! не работает этот пример
+test :: Double
+test = integral (\x -> x * x) 0 1
 
 -- 6. Реализуйте оператор примитивной рекурсии rec, используя функцию (-), укажите тип rec.
 --    (1 балл)
@@ -80,5 +82,5 @@ facRec n = rec 1 (*) n
 -- 8. Реализуйте факториал при помощи fix.
 --    (1 балл)
 facFix :: Integer -> Integer
-facFix = \n -> fix (\f n -> if n <= 1 then 1 else n * f (n-1)) n
+facFix = fix (\f n -> if n <= 1 then 1 else n * f (n-1))
   where fix f = f (fix f)
