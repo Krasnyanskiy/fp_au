@@ -54,18 +54,19 @@ minp p = minp' p 0
 --    (2 балла)
 integral :: (Double -> Double) -> Double -> Double -> Double
 integral f a b = if a /= b 
-	             then ((b-a) / (2.0 * ((b-a) / 0.01))) * (integral' f a b a 0.01)
+	             then 0.01 * (integral' f a b a 0.01)
 	             else 0.0
     where 
         integral' :: (Double -> Double) -> Double -> Double -> Double -> Double -> Double
         integral' f a0 b0 a h
             | a == a0 = (f a0) + integral' f a0 b0 (a+h) h
             | a >= b0 = (f b0) 
-            | otherwise = (2.0 * (f b0)) + integral' f a0 b0 (a+h) h 
+            | otherwise = (f a) + integral' f a0 b0 (a+h) h 
 
 -- !!! не работает этот пример
 test :: Double
 test = integral (\x -> x * x) 0 1
+-- передавал f не тот аргумент в otherwise
 
 -- 6. Реализуйте оператор примитивной рекурсии rec, используя функцию (-), укажите тип rec.
 --    (1 балл)
