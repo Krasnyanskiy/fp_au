@@ -9,21 +9,27 @@ fun :: [Integer] -> [Integer]
 fun l = f' l 0
     where 
     	f' :: [Integer] -> Integer -> [Integer]
+{-
+        -- почему бы не использовать pattern matching?
     	f' l i 
     	    | null l = []
             | (mod (head l) 2 == 0 && mod i 2 == 1) = [2 * head l] ++ f' (tail l) (i+1)
             | otherwise = [head l] ++ f' (tail l) (i+1)
+-}
+    	f' [] i = []
+        f' (x:xs) i | mod x 2 == 0 && mod i 2 == 1 = (2 * x) : f' xs (i + 1)
+                    | otherwise = x : f' xs (i + 1)
 
 -- 2. Реализовать следующие функции, используя композицию:
 -- (1 балл
 
 -- fa работает как функция notElem. Используйте функцию elem.
 fa :: Eq a => a -> [a] -> Bool
-fa = ((not) . ) . (elem)
+fa = (not . ) . (elem)
 
 ---- fb g x должен возвращать True, если и только если g x четен. Используйте функцию even.
 fb :: (Integer -> Integer) -> Integer -> Bool
-fb = ((even) . )  
+fb = (even . )  
 
 ---- fc xs возвращает True, если в xs есть хотя бы 1 положительное число, иначе False. Используйте функции filter и null.
 fc :: [Integer] -> Bool
@@ -44,18 +50,18 @@ ff = product . map (+3) . map (*2)
 ---- 3. fibs возвращает бесконечный список чисел Фибоначчи.
 ---- (0.5 балла)
 fibs :: [Integer]
-fibs = map fst (iterate (\(a,b) -> (b,a+b)) (1,1))
+fibs = map fst $ iterate (\(a,b) -> (b,a+b)) (1,1)
 
 ---- 4. isPrime проверяет простоту числа.
 ---- (1 балл)
 isPrime :: Integer -> Bool
 isPrime n 
 	 | n <= 1 = False
-	 | otherwise = not (any (>1) ((map (gcd n) [2..(n-1)])))
+	 | otherwise = not $ any (>1) $ map (gcd n) [2..n-1]
 
 ---- primes возвращает бесконечный список простых чисел.
 primes :: [Integer]
-primes = filter (>0) ([2] ++ (map isPrime' [3,5..]))
+primes = filter (>0) (2 : map isPrime' [3,5..])
     where 
     	isPrime' :: Integer -> Integer
         isPrime' x   
@@ -67,10 +73,11 @@ primes = filter (>0) ([2] ++ (map isPrime' [3,5..]))
 ---- (1 балл)
 shiftL :: [a] -> [a]
 shiftL [] = []
-shiftL xs = tail xs ++ [head xs] 
+shiftL (x:xs) = xs ++ [x] 
 
 -- shiftR переставляет последний элемент в начало. Реализуйте эту функцию так, чтобы она проходила по списку только один раз.
---shiftR :: [a] -> [a]
+shiftR :: [a] -> [a]
+shiftR = undefined
 --shiftR [] = []
 --shiftR xs = snd (shiftR' xs [])  
 --      where 
@@ -96,7 +103,7 @@ swap i j xs
 --7. takeLast n xs возвращает последние n элементов списка xs.
 ---- (1 балл)
 takeLast :: Int -> [a] -> [a]
-takeLast n xs = snd (splitAt (length xs - n) xs)
+takeLast n xs = drop (length xs - n) xs
 
 ---- 8. Назовем элементы, которые удовлетворяют предикату p хорошими, остальные плохими.
 ---- Тогда mapl p f xs выбрасывает плохие элементы, а блоки подряд идущих хороших элементов,
@@ -104,10 +111,17 @@ takeLast n xs = snd (splitAt (length xs - n) xs)
 ---- Заметьте, что в функцию f никогда не передаются пустые списки.
 ---- (1 балл)
 mapl :: (a -> Bool) -> ([a] -> b) -> [a] -> [b]
+{-
+-- почему бы не использовать pattern matching?
 mapl p f xs 
        | null xs = []
        | null (fst (span p xs)) = mapl p f (snd (break p xs))
        | otherwise = f (fst (span p xs)) : mapl p f (snd (span p xs))     
+-}
+mapl p f [] = []
+mapl p f xs = case span p xs of
+                ([], _)  -> mapl p f $ dropWhile (not . p) xs
+                (ys, zs) -> f ys : mapl p f zs
 
 ---- 9. Напишите аналоги функций unlines и unwords, используя функцию intercalate.
 ----    Заметьте, что функция unlines' работает чуть иначе, чем unlines.
@@ -150,9 +164,10 @@ main = fmap (\_ -> ()) $ runTestTT $ test
     ] ++ label "shiftL"
     [ shiftL [1..20] ~?= [2..20] ++ [1]
     , shiftL [] ~?= ([] :: [Bool])
-    --] ++ label "shiftR"
-    --[ shiftR [1..20] ~?= 20:[1..19]
-    --, shiftR [] ~?= ([] :: [Bool])
+    -- не надо убирать тесты
+    ] ++ label "shiftR"
+    [ shiftR [1..20] ~?= 20:[1..19]
+    , shiftR [] ~?= ([] :: [Bool])
     ] ++ label "swap"
     [ swap 1 2 [3,4,5,6] ~?= [3,5,4,6]
     , swap 2 0 "abcd" ~?= "cbad"
