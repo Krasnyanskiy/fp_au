@@ -13,7 +13,7 @@ import Test.HUnit
 И не нужно менять тесты, к тому же на неправильные. Зачем это вообще?
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 -}
-
+--окей, просто так удобнее проверять было   
 
 
 
@@ -51,7 +51,7 @@ conj a = Complex (real a) ((im a) * (-1))
 testsComplex =
     [ i *. i ~?= fromDouble (-1)
     , fromDouble 3 +. i ~?= Complex 3 1
-    , fromDouble 3 *. i ~?= Complex 0 3 -- Почему тут двойка стояла?
+    , fromDouble 3 *. i ~?= Complex 0 3 -- Почему тут двойка стояла?  --Забыл изменить обратно, после тестирования
     , (fromDouble 3 +. fromDouble 4 *. i) *. (fromDouble 4 +. fromDouble 3 *. i) ~?= fromDouble 25 *. i
     , conj (fromDouble 3 +. fromDouble 4 *. i) ~?= fromDouble 3 -. fromDouble 4 *. i
     , fromDouble 2 /. (fromDouble 1 +. i) ~?= fromDouble 1 -. i
