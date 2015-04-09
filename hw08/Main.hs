@@ -9,15 +9,15 @@ import Data.Char
 
 -- (0.5 балла)
 boolP :: Parser Char Bool
-boolP = undefined
+boolP = pure (\_->True) <*> string "True" <|> pure (\_->False) <*> string "False" 
 
 -- (0.5 балла)
 maybeP :: Parser Char a -> Parser Char (Maybe a)
-maybeP = undefined
+maybeP pa = pure (\x y -> Just y) <*> string "Just " <*> pa <|> pure (const Nothing) <*> string "Nothing"
 
 -- (0.5 балла)
 listP :: Parser Char a -> Parser Char [a]
-listP = undefined
+listP pa = undefined
 
 -- (0.5 балла)
 listP' :: Parser Char a -> Parser Char [a]
