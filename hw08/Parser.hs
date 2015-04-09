@@ -11,8 +11,8 @@ module Parser
 
 import Control.Applicative
 import Test.HUnit
-import Data.Foldable.Compat  --doesn't work without it 
-import Data.Foldable(toList)
+-- import Data.Foldable.Compat  --doesn't work without it -- потому что нужна новая версия стандартной библиотеки
+-- import Data.Foldable(toList)
 
 
 type Error = Either String -- Можно заменить на Maybe, если есть желание.
@@ -72,4 +72,4 @@ parserTestOK :: (Eq a, Show a, Eq lex, Show lex) => Parser lex a -> [lex] -> (a,
 parserTestOK (Parser p) s r = p s ~?= pure r
 
 parserTestFail :: (Eq a, Show a) => Parser lex a -> [lex] -> Test
-parserTestFail (Parser p) s = TestCase $ assertBool "Parser should fail" $ null $ toList (p s)
+parserTestFail (Parser p) s = TestCase $ assertBool "Parser should fail" $ null $ either (const []) return (p s)
