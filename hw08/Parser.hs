@@ -11,8 +11,7 @@ module Parser
 
 import Control.Applicative
 import Test.HUnit
-import Data.Foldable.Compat  --WTF it is needed here???
-
+import Data.Foldable.Compat  --doesn't work without it 
 import Data.Foldable(toList)
 
 
