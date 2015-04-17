@@ -1,4 +1,8 @@
 import Control.Exception(catch)
+import Control.Monad
+import System.Directory
+import System.Environment 
+import System.IO  
 
 {-
 cat принимает имена файлов и выводит их содержимое на экран.
@@ -8,4 +12,17 @@ cat принимает имена файлов и выводит их содер
 -}
 
 main :: IO ()
-main = undefined
+main = do 
+        files <- getArgs
+        case files of
+            [] -> forever $ getLine >>= \x -> putStrLn $ show x  
+            xs -> forM files (\f -> do
+                                fe <- doesFileExist f
+                                case fe of 
+                                    True -> do 
+                                              fContent <- readFile f
+                                              mapM putStrLn (lines fContent) 
+                                              putStr ""
+                                    False -> putStrLn $ "File " ++ f ++ " does not exist!"
+                             )   
+        putStr ""
