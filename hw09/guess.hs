@@ -1,4 +1,6 @@
 import System.Random(randomRIO)
+import Control.Monad   
+import System.Exit
 
 {-
 Реализуйте следующую программу.
@@ -9,4 +11,16 @@ import System.Random(randomRIO)
 -}
 
 main :: IO ()
-main = undefined
+main = do	    	
+	    secret <- randomRIO (1,100) :: IO Int
+	    r <- forM [1..5] (\_ -> do
+                            guess <- getLine
+                            if (read guess) < secret then
+                            	putStrLn "Secret number is >"
+                            else if (read guess) > secret then
+                                putStrLn "Secret number is <"	
+                            else do
+                            	putStrLn "WIN!!!"	
+                                exitSuccess
+	    	              ) 
+	    putStrLn "You lose!"
