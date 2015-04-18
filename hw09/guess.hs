@@ -13,14 +13,10 @@ import System.Exit
 main :: IO ()
 main = do	    	
 	    secret <- randomRIO (1,100) :: IO Int
-	    r <- forM [1..5] (\_ -> do
+	    forM_ [1..5] $ \_ -> do
                             guess <- getLine
-                            if (read guess) < secret then
-                            	putStrLn "Secret number is >"
-                            else if (read guess) > secret then
-                                putStrLn "Secret number is <"	
-                            else do
-                            	putStrLn "WIN!!!"	
-                                exitSuccess
-	    	              ) 
+                            case compare secret (read guess) of
+                                LT -> putStrLn "Secret number is <"
+                                GT -> putStrLn "Secret number is >"	
+                            	EQ -> putStrLn "WIN!!!"	>> exitSuccess
 	    putStrLn "You lose!"
