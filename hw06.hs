@@ -2,21 +2,6 @@ import qualified Data.Map as M
 import Prelude hiding (lookup)
 import Test.HUnit
 
-
-
-
-{-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Не надо ничего комментировать, оно же не мешается.
-Иначе тесты нельзя запустить.
-
-И не нужно менять тесты, к тому же на неправильные. Зачем это вообще?
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
--}
---окей, просто так удобнее проверять было   
-
-
-
 ------------------------------------------------------------------------------
 -- 1. Реализуйте функции для работы с комплекснми числами.
 
@@ -51,7 +36,7 @@ conj a = Complex (real a) ((im a) * (-1))
 testsComplex =
     [ i *. i ~?= fromDouble (-1)
     , fromDouble 3 +. i ~?= Complex 3 1
-    , fromDouble 3 *. i ~?= Complex 0 3 -- Почему тут двойка стояла?  --Забыл изменить обратно, после тестирования
+    , fromDouble 3 *. i ~?= Complex 0 3
     , (fromDouble 3 +. fromDouble 4 *. i) *. (fromDouble 4 +. fromDouble 3 *. i) ~?= fromDouble 25 *. i
     , conj (fromDouble 3 +. fromDouble 4 *. i) ~?= fromDouble 3 -. fromDouble 4 *. i
     , fromDouble 2 /. (fromDouble 1 +. i) ~?= fromDouble 1 -. i
@@ -156,12 +141,178 @@ type Error = String
 ---- evalExpr возвращает либо успешно вычисленный результат, либо список ошибок.
 ---- Ошибки бывают двух видов: необъявленная переменная и несоответствие типов.
 ---- Возвращается список ошибок, т.к. выражение может содержать больше одной ошибки.
+
+match :: Value -> Value -> Bool
+match (I _) (I _) = True
+match (B _) (B _) = True
+match _ _ = False
+
+getInt :: Value -> Int
+getInt r = read (last $ words $ show r) :: Int
+
+getBool :: Value -> Bool
+getBool r = read (last $ words $ show r) :: Bool
+
 evalExpr :: M.Map String Value -> Expr -> Either [Error] Value
-evalExpr = undefined
+evalExpr m (Var v) = let lse = M.lookup v m in 
+	                 case lse of 
+	                     Nothing -> Left ["Declaration error, " ++ show v]
+	                     Just x -> Right x
+
+evalExpr m (Const v) = Right v
+
+evalExpr m (UnOp Neg e) = let ee1 = evalExpr m e
+                          in 
+                          case ee1 of 
+                              Left le -> Left le
+                              Right r -> if match r (I 0) then
+                                            Right $ I $ - getInt r      
+                                         else  
+                                         	Left ["Type mismatch error"]     
+
+evalExpr m (UnOp Not e) = let ee1 = evalExpr m e
+                          in 
+                          case ee1 of 
+                              Left le -> Left le
+                              Right r -> if match r (B True) then
+                                            Right $ B $ not $ getBool r   
+                                         else  
+                                            Left ["Type mismatch error"]                                           
+
+
+evalExpr m (BinOp Plus e1 e2) = let (ee1,ee2) = (evalExpr m e1, evalExpr m e2) 
+                                in 
+                                case ee1 of
+                                    Left le -> Left le  
+                                    Right r -> case ee2 of 
+                                	               Left le -> Left le
+                                	               Right r1 -> if match r r1 then
+                                	               	               if match r (I 0) then
+                                	               	                   Right $ I $ (getInt r) + (getInt r1)   
+                                	               	               else
+                                	               	                   Left ["Type mismatch error"]   
+                                	               	           else
+                                	               	               Left ["Type mismatch error"]
+
+
+evalExpr m (BinOp Minus e1 e2) = let (ee1,ee2) = (evalExpr m e1, evalExpr m e2) 
+                                 in 
+                                 case ee1 of
+                                    Left le -> Left le  
+                                    Right r -> case ee2 of 
+                                	               Left le -> Left le
+                                	               Right r1 -> if match r r1 then
+                                	               	               if match r (I 0) then
+                                	               	                   Right $ I $ (getInt r) - (getInt r1)   
+                                	               	               else
+                                	               	                   Left ["Type mismatch error"]   
+                                	               	           else
+                                	               	               Left ["Type mismatch error"]                                
+
+evalExpr m (BinOp Mul e1 e2) = let (ee1,ee2) = (evalExpr m e1, evalExpr m e2) 
+                                 in 
+                                 case ee1 of
+                                    Left le -> Left le  
+                                    Right r -> case ee2 of 
+                                	               Left le -> Left le
+                                	               Right r1 -> if match r r1 then
+                                	               	               if match r (I 0) then
+                                	               	                   Right $ I $ (getInt r) * (getInt r1)   
+                                	               	               else
+                                	               	                   Left ["Type mismatch error"]   
+                                	               	           else
+                                	               	               Left ["Type mismatch error"]
+
+evalExpr m (BinOp Less e1 e2) = let (ee1,ee2) = (evalExpr m e1, evalExpr m e2) 
+                                 in 
+                                 case ee1 of
+                                    Left le -> Left le  
+                                    Right r -> case ee2 of 
+                                	               Left le -> Left le
+                                	               Right r1 -> if match r r1 then
+                                	               	               if match r (I 0) then
+                                	               	                   Right $ B $ (getInt r) < (getInt r1)   
+                                	               	               else
+                                	               	                   Left ["Type mismatch error"]   
+                                	               	           else
+                                	               	               Left ["Type mismatch error"]  
+
+evalExpr m (BinOp Greater e1 e2) = let (ee1,ee2) = (evalExpr m e1, evalExpr m e2) 
+                                   in 
+                                   case ee1 of
+                                    Left le -> Left le  
+                                    Right r -> case ee2 of 
+                                	               Left le -> Left le
+                                	               Right r1 -> if match r r1 then
+                                	               	               if match r (I 0) then
+                                	               	                   Right $ B $ (getInt r) > (getInt r1)   
+                                	               	               else
+                                	               	                   Left ["Type mismatch error"]   
+                                	               	           else
+                                	               	               Left ["Type mismatch error"]    
+
+evalExpr m (BinOp Equals e1 e2) = let (ee1,ee2) = (evalExpr m e1, evalExpr m e2) 
+                                  in 
+                                  case ee1 of
+                                    Left le -> Left le  
+                                    Right r -> case ee2 of 
+                                	               Left le -> Left le
+                                	               Right r1 -> if match r r1 then
+                        	               	                       Right $ B $ (getInt r) == (getInt r1) 
+                                	               	           else
+                                	               	               Left ["Type mismatch error"] 
+
+
+evalExpr m (If e1 e2 e3) = let (ee1,ee2,ee3) = (evalExpr m e1, evalExpr m e2, evalExpr m e3) 
+                           in
+                           case ee1 of 
+                               Left le -> Left le
+                               Right r -> if match r (B True) then
+                               	              if getBool r then
+                               	                  case ee2 of 
+                               	                      Left le -> Left le
+                               	                      Right r -> Right r
+                               	              else
+                               	                  case ee3 of 
+                               	                      Left le -> Left le
+                               	                      Right r -> Right r 
+                               	          else 
+                               	              Left ["Type mismatch error"]                
+
 
 ---- evalStatement принимает текущее значение переменных и statement и возвращает новое значение переменных после его выполнения.
 evalStatement :: M.Map String Value -> Statement -> Either [Error] (M.Map String Value)
-evalStatement = undefined
+evalStatement m (Assign s e) = let ee = evalExpr m e 
+                               in
+                               case ee of 
+                                   Left le -> Left le
+                                   Right r -> Right $ M.insert s r m 
+
+evalStatement m (Compound []) = Right m
+evalStatement m (Compound (e:es)) = let ee = evalStatement m e 
+									in 
+									case ee of 
+									  Left ee -> Left ee
+									  Right r -> evalStatement r $ Compound es 
+
+
+
+evalStatement m (While e st) = let ee = evalExpr m e
+                               in
+                               case ee of 
+                               	 Left ee -> Left ee
+                               	 Right r -> if match r (B True) then
+                               	 	            if getBool r then
+                               	                    let ste = evalStatement m st
+                               	                    in 
+                               	                    case ste of 
+                               	                        Left ee -> Left ee
+                               	                        Right r -> evalStatement r (While e st)
+                               	                else
+                               	                    Right m          
+                               	            else
+                               	                Left ["Type mismatch error"]        
+
 
 ---- tests
 
@@ -203,20 +354,57 @@ lookup sk (Branch k' v l r) | k' == sk = Just v
                             | k' < sk = lookup sk r
 
 insert :: Ord k => k -> v -> Map k v -> (Map k v, Maybe v)
-insert = undefined -- k Leaf =  
+insert k v (Leaf) = (Branch k v Leaf Leaf, Nothing)
+insert k v (Branch k' v' l r) = let (li, ri) = (insert k v l, insert k v r)
+                                in 
+                                if k < k' then
+                                    (Branch k' v' (fst li) r, snd li)
+                                else if k > k' then
+                                    (Branch k' v' l (fst ri), snd ri)
+                                else
+                                    (Branch k' v' l r, Just v)  
+
 
 delete :: Ord k => k -> Map k v -> Maybe (Map k v)
-delete = undefined
-{-
-delete k Leaf = Nothing
-delete sk (Branch k' v l r) | k' == sk...
--}
+delete k (Leaf) = Just Leaf  
+delete k (Branch k' v' l r) = let (ld, rd) = (delete k l, delete k r)
+                              in
+                              if k < k' then
+                              	  case ld of 
+                              	      Nothing -> Just (Branch k' v' Leaf r)	
+                              	      Just x -> Just (Branch k' v' x r) 	
+                              else if k > k' then 
+                                  case rd of 
+                              	      Nothing -> Just (Branch k' v' l Leaf)	
+                              	      Just x -> Just (Branch k' v' l x) 	
+                              else
+                                  let dd = delete' k (Branch k' v' l r)
+                                  in 
+                                  case dd of 
+                	                  Leaf -> Nothing
+                	                  m -> Just m
+                            where
+                                findMinKey :: Ord k => Map k v -> (k, v)
+                                findMinKey (Branch k' v' Leaf _) = (k', v')
+                                findMinKey (Branch k' v' l _) = findMinKey l       
+
+                            	delete' :: Ord k => k -> Map k v -> Map k v
+                            	delete' k (Branch k' v' Leaf Leaf) = Leaf
+                            	delete' k (Branch k' v' l Leaf) = l
+                            	delete' k (Branch k' v' Leaf r) = r
+                            	delete' k (Branch k' v' l r) = let ((mk, mkv), new_r) = (findMinKey r, delete' mk r)                           	                               
+                            	                               in 
+                            	                               (Branch mk mkv l new_r)
+
+insert' :: Ord k => Map k v -> (k, v) -> Map k v   
+insert' m kv = fst $ insert (fst kv) (snd kv) m   
 
 fromList :: Ord k => [(k, v)] -> Map k v
-fromList = undefined
+fromList l = foldl insert' Leaf l
 
 toList :: Map k v -> [(k, v)]
-toList = undefined
+toList Leaf = []
+toList (Branch k' v' l r) = (toList l) ++ [(k', v')] ++ (toList r)   
 
 ---- tests
 
