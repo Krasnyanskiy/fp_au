@@ -18,7 +18,7 @@ testCasesComplex =
     , (Complex 0 (-7), "-7.0 * i")
     ]
 
-testsComplex =
+testsComplex = 
     [ i * i ~?= -1
     , 3 + i ~?= Complex 3 1
     , 3 * i ~?= Complex 0 3
