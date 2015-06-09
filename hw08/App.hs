@@ -5,8 +5,8 @@ import Control.Applicative
 data Tree a = Node a [Tree a]
 
 instance Functor Tree where
-    fmap = undefined
+    fmap f (Node a ch) = Node (f a) $ map (fmap f) ch
 
 instance Applicative Tree where
-    pure = undefined
-    (<*>) = undefined
+    pure a Node a $ repeat $ pure a
+    (Node f lf) <*> (Node v lv) = Node (f v) $ zipWith (<*>) lf lv

@@ -63,20 +63,19 @@ try p = (fmap Just p) <|> pure Nothing
 
 -- (0.5 балла)
 endBy :: Parser lex a -> Parser lex b -> Parser lex [a]
-endBy = undefined
+endBy p1 p2 = many $ p1 <* p2
 
 -- (0.5 балла)
 endBy1 :: Parser lex a -> Parser lex b -> Parser lex [a]
-endBy1 = undefined
+endBy1 p1 p2 = many1 $ p1 <* p2
 
 -- (0.5 балла)
 sepBy :: Parser lex a -> Parser lex b -> Parser lex [a]
-sepBy = undefined
+sepBy p1 p2 = sepBy1 p1 p2 <|> pure []
 
 -- (0.5 балла)
 sepBy1 :: Parser lex a -> Parser lex b -> Parser lex [a]
-sepBy1 = undefined
-
+sepBy1 p1 p2 = (:) <$> p1 <*> (many (p2 *> p1))
 
 -- (0.1 балла)
 between :: Parser lex a -> Parser lex b -> Parser lex c -> Parser lex c
@@ -100,8 +99,8 @@ angles = between (symbol '<') (symbol '>')
 
 -- (1 балл)
 foldr1P :: (a -> b -> a -> a) -> Parser lex a -> Parser lex b -> Parser lex a
-foldr1P = undefined
+foldr1P f p1 p2 = f <$> p1 <*> p2 <*> ((foldr1P f p1 p2) <|> p1)
 
 -- (1 балл)
 foldl1P :: (a -> b -> a -> a) -> Parser lex a -> Parser lex b -> Parser lex a
-foldl1P = undefined
+foldl1P f p1 p2 = foldl (\acc (x, y) -> f acc x y) <$> p1 <*> many ((,) <$> p2 <*> p1)

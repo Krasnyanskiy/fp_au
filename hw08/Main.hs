@@ -17,17 +17,20 @@ maybeP pa = pure (\x y -> Just y) <*> string "Just " <*> pa <|> pure (const Noth
 
 -- (0.5 балла)
 listP :: Parser Char a -> Parser Char [a]
-listP pa = undefined
+listP p = brackets $ sepBy p $ symbol ','
+
+helper :: Parser Char a -> Parser Char a
+helper p = spaces *> p <* spaces
 
 -- (0.5 балла)
 listP' :: Parser Char a -> Parser Char [a]
-listP' = undefined
+listP' p = brackets $ sepBy p $ helper $ symbol ','
 
 data Tree a b = Node (Tree a b) a (Tree a b) | Leaf b deriving (Show, Eq)
 
 -- (0.5 балла)
 treeP :: Parser Char a -> Parser Char b -> Parser Char (Tree a b)
-treeP = undefined
+treeP p1 p2 = Leaf <$> p2 <|> (angles $ Node <$> (treeP p1 p2) <*> (braces p1) <*> (treeP p1 p2))
 
 main = fmap (const ()) $ runTestTT $ test
     $    label "pure"
