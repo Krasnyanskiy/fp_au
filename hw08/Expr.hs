@@ -90,14 +90,89 @@ isValid c = isOpSymbol c || isAlphaNum c || isSpace c || elem c "(){}"
 --------------------------------------------------
 -- Синтаксический анализ
 
+pNum :: Parser Lexeme Int
+pNum = (\(NumberConst a) -> a) <$> (satisfy numerical)
+            where 
+            numerical lex = case lex of 
+                                 NumberConst _ -> True
+                                 otherwise -> False
+
+pI :: Parser Lexeme Value
+pI = (I <$> pNum) <|> 
+     (I <$> (symbol (BinOpSign Minus) *> (fmap negate pNum)))                                        
+
 pValue :: Parser Lexeme Value
-pValue = undefined
+pValue = (symbol (BoolConst True) *> (pure $ B True)) <|> 
+         (symbol (BoolConst False) *> (pure $ B False)) <|>
+         pI    
+
+
+pIdent :: Parser Lexeme String
+pIdent = (\(Ident a) -> a) <$> (satisfy ident)
+            where 
+            ident lex = case lex of 
+                            Ident _ -> True
+                            otherwise -> False
+
+pVar :: Parser Lexeme Expr
+pVar = Var <$> pIdent 
+
+pConst :: Parser Lexeme Expr
+pConst = Const <$> pValue
+
+pUnOp :: Parser Lexeme Expr
+pUnOp = UnOp <$> ((symbol (BinOpSign Minus) *> pure Neg) <|> (symbol NotKeyword *> pure Not)) <*> pExpr  
+
+pPlus :: Parser Lexeme BinOp
+pPlus = symbol (BinOpSign Plus) *> pure Plus
+
+pMinus :: Parser Lexeme BinOp
+pMinus = symbol (BinOpSign Minus) *> pure Minus
+
+pMul :: Parser Lexeme BinOp
+pMul = symbol (BinOpSign Mul) *> pure Mul
+
+pLess :: Parser Lexeme BinOp
+pLess = symbol (BinOpSign Less) *> pure Less
+
+pGreater :: Parser Lexeme BinOp
+pGreater = symbol (BinOpSign Greater) *> pure Greater
+
+pEquals :: Parser Lexeme BinOp
+pEquals = symbol (BinOpSign Equals) *> pure Equals
+
+pIf :: Parser Lexeme Expr
+pIf = (\_ condExpr _ thenExpr _ elseExpr -> If condExpr thenExpr elseExpr) 
+      <$> 
+      symbol IfKeyword <*> pExpr <*> symbol ThenKeyword <*> pExpr <*> symbol ElseKeyword <*> pExpr
+
+pLex :: Parser Lexeme Expr
+pLex =  (Const <$> pValue) <|> pVar <|> pUnOp <|> pIf <|> between (symbol LPSign) (symbol RPSign) pExpr
+
+pFold :: Parser Lexeme Expr
+pFold = foldl1P (\lhs binOp rhs -> BinOp binOp lhs rhs) pLex pMul
+
+pSum :: Parser Lexeme Expr
+pSum = foldl1P (\lhs binOp rhs -> BinOp binOp lhs rhs) pFold (pPlus <|> pMinus)
 
 pExpr :: Parser Lexeme Expr
-pExpr = undefined
+pExpr = foldl1P (\lhs binOp rhs -> BinOp binOp lhs rhs) pSum (pLess <|> pGreater <|> pEquals)
+
+
+--data Statement = Assign String Expr | While Expr Statement | Compound [Statement] deriving (Eq, Show)
+
+pAssign :: Parser Lexeme Statement
+pAssign = undefined
+
+pWhile :: Parser Lexeme Statement
+pWhile = undefined
+
+pCompound :: Parser Lexeme Statement
+pCompound = undefined
+
 
 pStatement :: Parser Lexeme Statement
-pStatement = undefined
+pStatement = pAssign <|> pWhile <|> pCompound 
 
 -- tests
 
