@@ -2,6 +2,7 @@
 {-# LANGUAGE TupleSections #-}
 
 import Control.Monad
+import Data.Maybe
 import qualified Data.Map as M
 import Test.HUnit
 
@@ -9,19 +10,80 @@ import Expr
 import Eval
 
 getInt :: Eval Value -> Eval Integer
-getInt m = undefined
+getInt m = do
+              val <- m
+              case val of 
+                  I i -> return i
+                  otherwise -> mzero    
+
 
 getBool :: Eval Value -> Eval Bool
-getBool m = undefined
+getBool m = do
+	            val <- m
+	            case val of 
+	              B b -> return b 
+	              otherwise -> mzero
+
 
 if' :: Eval Value -> Eval () -> Maybe (Eval ()) -> Eval ()
-if' c t e = undefined
+if' c t e = do
+                condRes <- getBool c
+                if condRes then 
+                    t
+                else 
+                    fromMaybe mzero e 
+
+--toB :: Integer -> Bool
+--toB num | num == 0 = True
+--        | otherwise = False                            
+
 
 evalExpr :: Expr -> Eval Value
-evalExpr = undefined
+evalExpr (Const c) = return c
+evalExpr (Var s) = getVar s
+evalExpr (BinOp op lhs rhs) = case op of 
+                                    And -> do 
+                                           	 lb <- getBool $ evalExpr lhs 
+                                           	 rb <- getBool $ evalExpr rhs 
+                                           	 return $ B $ lb && rb 
+                                    Or -> do 
+                                            lb <- getBool $ evalExpr lhs 
+                                            rb <- getBool $ evalExpr rhs 
+                                            return $ B $ lb || rb
+                                    otherwise -> do 
+                                    	            l <- getInt $ evalExpr lhs
+                                                    r <- getInt $ evalExpr rhs
+                                                    case op of        	      
+					                                    Plus -> return $ I $ l + r  
+					                                    Minus -> return $ I $ l - r     
+					                                    Mul -> return $ I $ l * r
+					                                    Less -> return $ B $ l < r
+					                                    Greater -> return $ B $ l > r
+					                                    Equals -> return $ B $ l == r
+evalExpr (UnOp op nest) =  case op of 
+                                Neg -> do  
+                                   n <- getInt $ evalExpr nest
+                                   return $ I $ negate n
+                                Not -> do
+                                   n' <- getBool $evalExpr nest 
+                                   return $ B $ not $ n'   
+
 
 evalStatement :: Statement -> Eval ()
-evalStatement = undefined
+evalStatement (Compound body) = mapM_ evalStatement body
+evalStatement this@(While cond body) = do 
+	                                     val <- getBool $ evalExpr cond
+	                                     if val then 
+	                                     	evalStatement body >> evalStatement this
+	                                     else 
+	                                     	return ()
+evalStatement (Assign varName expr) = evalExpr expr >>= update varName
+evalStatement (If cond thenBody elseBody) = do
+	                                            val <- getBool $ evalExpr cond
+	                                            if val then 
+	                                            	evalStatement thenBody
+	                                           	else 
+	                                           		fromMaybe mzero (fmap evalStatement elseBody)
 
 ------------------------------------------------------------------------------------------------
 -- tests

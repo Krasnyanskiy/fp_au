@@ -13,18 +13,26 @@ import Data.IORef
 newtype StateIO s a = StateIO { getStateIO :: IORef s -> IO a }
 
 instance Monad (StateIO s) where
-    return = undefined
-    (>>=) = undefined
+    return arg = StateIO $ \_ -> return arg
+    (>>=) (StateIO state) f = StateIO $ \ref -> state ref >>= (\arg -> let (StateIO f') = f arg in f' ref)
 
 instance MonadState s (StateIO s) where
-    get = undefined
-    put = undefined
+    get = StateIO $ \ref -> readIORef ref
+    put arg = StateIO $ \ref -> writeIORef ref arg
 
 runStateIO :: StateIO s a -> s -> IO (a,s)
-runStateIO = undefined
+runStateIO (StateIO f) state = do 
+                                 ref <- newIORef state
+                                 val <- f ref
+                                 state' <- readIORef ref
+                                 return (val, state')
 
 execStateIO :: StateIO s a -> s -> IO s
-execStateIO = undefined
+execStateIO state s  = do 
+                      (_, s') <- runStateIO state s
+                      return s'
 
 evalStateIO :: StateIO s a -> s -> IO a
-evalStateIO = undefined
+evalStateIO state s = do 
+                        (a, _) <- runStateIO state s
+                        return a

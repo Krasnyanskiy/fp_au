@@ -18,30 +18,50 @@ type Store = M.Map String Value
 newtype Eval a = Eval { runEval :: Store -> (Maybe a, [Error], Store) }
 
 instance Functor Eval where
-    fmap f (Eval m) = Eval undefined
+    fmap f (Eval m) = Eval $ \store -> let (res, errs, st) = m store
+                                       in  (fmap f res, errs, st) 
+
 
 instance Applicative Eval where
-    pure x = Eval undefined
-    Eval m <*> Eval k = Eval undefined
+    pure x = Eval $ \store -> (Just x, [], store)
+    Eval m <*> Eval k = Eval $ \store -> let (res, errs, st) = m store
+                                             (res', errs', st') = k st'
+                                         in (res <*> res', errs ++ errs', st')        
 
 instance Monad Eval where
-    return x = Eval undefined
-    Eval m >>= k = Eval undefined
+    return x = Eval $ \store -> (Just x, [], store)
+    Eval m >>= k = Eval $ \store -> let (res, errs, st) = m store
+                                    in 
+                                    case res of 
+                                      Just x -> let (res', errs', st') = (runEval $ k x) st 
+                                                in (res', errs ++ errs', st')
+                                      Nothing -> (Nothing, errs, st)
+
 
 instance Alternative Eval where
-    empty = Eval undefined
-    Eval l <|> Eval r = Eval undefined
+    empty = Eval $ \store -> (Nothing, [], store) 
+    Eval l <|> Eval r = Eval $ \store -> let (res, errs, st) = l store
+                                         in 
+                                         case res of 
+                                             Just x -> (res, errs, st)
+                                             Nothing -> r store  
 
 -- MonadPlus - аналог Alternative для монад
 -- mzero - вычисление, которое ничего не делает, сразу завершается неуспехом
 -- mplus m1 m2 пытается выполнить m1, если тот завершился неуспехом, выполняет m2
 -- Примеры использования этого класса есть в Utils.hs
 instance MonadPlus Eval where
-    mzero = Eval undefined
-    mplus (Eval l) (Eval r) = Eval undefined
+    mzero = Eval $ \store -> (Nothing, [], store)
+    mplus (Eval l) (Eval r) = Eval $ \store -> let (res, errs, st) = l store
+                                               in 
+                                               case res of 
+                                                   Just x -> (res, errs, st)
+                                                   Nothing -> r store 
 
 update :: String -> Value -> Eval ()
-update k v = Eval undefined
+update k v = Eval $ \store -> (Just (), [], M.insert k v store)
 
 getVar :: String -> Eval Value
-getVar v = Eval undefined
+getVar k = Eval $ \store -> case M.lookup k store of 
+                                Just x -> (Just x, [], store)
+                                Nothing -> (Nothing, ["Nope"], store)   
