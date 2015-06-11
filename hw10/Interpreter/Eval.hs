@@ -51,7 +51,7 @@ instance Alternative Eval where
 -- mplus m1 m2 пытается выполнить m1, если тот завершился неуспехом, выполняет m2
 -- Примеры использования этого класса есть в Utils.hs
 instance MonadPlus Eval where
-    mzero = Eval $ \store -> (Nothing, [], store)
+    mzero = Eval $ \store -> (Nothing, ["We start and we've failed"], store)
     mplus (Eval l) (Eval r) = Eval $ \store -> let (res, errs, st) = l store
                                                in 
                                                case res of 
